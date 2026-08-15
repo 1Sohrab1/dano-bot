@@ -7,11 +7,13 @@ from aiogram.types import Message
 from app.config import settings
 from app.database.database import init_db
 from app.handlers.admin import router as admin_router
+from app.handlers.files import router as files_router
 
 
 dp = Dispatcher()
 
 dp.include_router(admin_router)
+dp.include_router(files_router)
 
 
 @dp.message(CommandStart())

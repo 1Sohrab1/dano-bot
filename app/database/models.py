@@ -7,7 +7,8 @@ class File(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
     telegram_file_id: str
-    file_name: str
+    file_type: str
+    file_name: str | None = None
 
     uploaded_by: int
 
