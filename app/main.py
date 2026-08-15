@@ -5,9 +5,12 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 
 from app.config import settings
+from app.handlers.admin import router as admin_router
 
 
 dp = Dispatcher()
+
+dp.include_router(admin_router)
 
 
 @dp.message(CommandStart())
