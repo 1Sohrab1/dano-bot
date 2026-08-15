@@ -1,0 +1,5 @@
+aiogram
+pydantic-settings
+sqlmodel
+asyncpg
+alembic
