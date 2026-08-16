@@ -1,0 +1,20 @@
+[project]
+name = "dano-bot"
+version = "0.1.0"
+description = "A modular and open-source Telegram bot for Dano Academy"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiogram",
+    "alembic",
+    "aiosqlite",
+    "asyncpg",
+    "pydantic-settings",
+    "sqlmodel",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+]
