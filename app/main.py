@@ -5,6 +5,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 
 from app.config import settings
+from app.database.database import init_db
 from app.handlers.admin import router as admin_router
 
 
@@ -22,6 +23,8 @@ async def start_handler(message: Message) -> None:
 
 
 async def main() -> None:
+    await init_db()
+
     bot = Bot(token=settings.bot_token)
 
     try:

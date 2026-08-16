@@ -9,4 +9,4 @@ class AdminFilter(BaseFilter):
         if message.from_user is None:
             return False
 
-        return is_admin(message.from_user.id)
+        return await is_admin(message.from_user.id)
