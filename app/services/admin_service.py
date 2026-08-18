@@ -1,5 +1,5 @@
-from app.config import settings
+from app.database.repositories import is_admin as repository_is_admin
 
 
-def is_admin(user_id: int) -> bool:
-    return user_id in settings.admin_id_list
+async def is_admin(user_id: int) -> bool:
+    return await repository_is_admin(user_id)

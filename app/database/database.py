@@ -6,7 +6,7 @@ from app.config import settings
 
 engine: AsyncEngine = create_async_engine(
     settings.database_url,
-    echo=False,
+    echo=settings.debug,
 )
 
 
