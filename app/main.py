@@ -9,7 +9,7 @@ from app.database.database import init_db
 # from app.routers.admin import router as admin_router
 
 
-# dp = Dispatcher()
+dp = Dispatcher()
 
 # dp.include_router(admin_router)
 
