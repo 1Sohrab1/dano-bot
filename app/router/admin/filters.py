@@ -9,4 +9,4 @@ class AdminFilter(BaseFilter):
         if message.from_user is None:
             return False
 
-        return message.from_user.id in settings.admin_id_list
+        return message.from_user.id in settings.admin_ids
