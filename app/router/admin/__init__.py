@@ -4,4 +4,4 @@ from .router import admins
 
 admins.message.filter(AdminFilter())
 
-__all__ = ["admins"]
+__all__ = ["admins", "handlers"]
