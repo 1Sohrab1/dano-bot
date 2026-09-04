@@ -4,4 +4,4 @@ from .router import users
 
 users.message.filter(UserFilter())
 
-__all__ = ["users"]
+__all__ = ["handlers", "users"]
