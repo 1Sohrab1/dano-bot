@@ -1,0 +1,41 @@
+name: Bug report
+description: Report a reproducible problem in the bot template or its tooling.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Please provide enough detail to reproduce it.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Include the smallest set of steps or commands that reproduces the issue.
+      placeholder: |
+        1. Copy `.env.example` to `.env`
+        2. Run `uv run ...`
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include OS, Python, uv, and relevant dependency versions.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Remove tokens, credentials, and personal data before posting logs.
+      render: shell
