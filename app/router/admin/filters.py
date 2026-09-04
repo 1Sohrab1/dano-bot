@@ -1,7 +1,7 @@
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
 
-from app.services.admin_service import is_admin
+from app.config import settings
 
 
 class AdminFilter(BaseFilter):
@@ -9,4 +9,4 @@ class AdminFilter(BaseFilter):
         if message.from_user is None:
             return False
 
-        return await is_admin(message.from_user.id)
+        return message.from_user.id in settings.admin_ids

@@ -1,25 +1,16 @@
 import asyncio
 
 from aiogram import Bot, Dispatcher
-from aiogram.filters import CommandStart
-from aiogram.types import Message
 
 from app.config import settings
 from app.database.database import init_db
-# from app.routers.admin import router as admin_router
-
+from app.router.admin import admins
+from app.router.user import users
 
 dp = Dispatcher()
 
-# dp.include_router(admin_router)
-
-
-@dp.message(CommandStart())
-async def start_handler(message: Message) -> None:
-    await message.answer(
-        "سلام 👋\n"
-        "به دانو بات خوش اومدی 🤖"
-    )
+dp.include_router(admins)
+dp.include_router(users)
 
 
 async def main() -> None:
