@@ -1,4 +1,4 @@
-from . import handlers as _handlers
+from . import handlers
 from .filters import UserFilter
 from .router import users
 
