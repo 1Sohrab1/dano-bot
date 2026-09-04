@@ -32,7 +32,6 @@ jobs:
         if: github.event_name == 'push' && github.event.deleted == false
         uses: appleboy/telegram-action@master
         with:
-          format: markdown
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           disable_web_page_preview: true
@@ -48,7 +47,6 @@ jobs:
         if: github.event_name == 'issues'
         uses: appleboy/telegram-action@master
         with:
-          format: markdown
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           disable_web_page_preview: true
@@ -63,7 +61,6 @@ jobs:
         if: github.event_name == 'issue_comment'
         uses: appleboy/telegram-action@master
         with:
-          format: markdown
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           disable_web_page_preview: true
@@ -78,7 +75,6 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: appleboy/telegram-action@master
         with:
-          format: markdown
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           disable_web_page_preview: true
@@ -93,7 +89,6 @@ jobs:
         if: github.event_name == 'pull_request_review_comment'
         uses: appleboy/telegram-action@master
         with:
-          format: markdown
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           disable_web_page_preview: true
@@ -108,7 +103,6 @@ jobs:
         if: github.event_name == 'release'
         uses: appleboy/telegram-action@master
         with:
-          format: markdown
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           disable_web_page_preview: true
