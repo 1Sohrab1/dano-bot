@@ -50,6 +50,12 @@ app/
 Each router owns its handlers and filters. Business logic belongs in application services, while
 database access belongs in a future repository layer.
 
+## Documentation
+
+- [Project specification](docs/SPEC.md)
+- [Implementation stages](docs/tasks/README.md)
+- [Architecture decisions](docs/decisions/ADR-001-starter-architecture.md)
+
 ## Scope
 
 The template is the foundation for incremental development. Add one feature module at a time,
