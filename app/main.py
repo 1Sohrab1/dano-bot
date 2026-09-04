@@ -7,7 +7,6 @@ from app.database.database import init_db
 from app.router.admin import admins
 from app.router.user import users
 
-
 dp = Dispatcher()
 
 dp.include_router(admins)
