@@ -47,6 +47,25 @@ async def is_admin(telegram_id: int) -> bool:
     return admin is not None
 
 
+async def list_admin_telegram_ids() -> list[int]:
+    async with get_session() as session:
+        result = await session.exec(select(Admin.telegram_id))
+        return list(result.all())
+
+
+async def delete_admin_by_telegram_id(telegram_id: int) -> None:
+    async with get_session() as session:
+        result = await session.exec(
+            select(Admin).where(Admin.telegram_id == telegram_id)
+        )
+        admin = result.one_or_none()
+        if admin is None:
+            return
+
+        await session.delete(admin)
+        await session.commit()
+
+
 async def get_or_create_admin(telegram_id: int) -> Admin:
     user = await get_or_create_user(telegram_id)
     if user.id is None:

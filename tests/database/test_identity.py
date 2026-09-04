@@ -1,4 +1,5 @@
 import asyncio
+from types import SimpleNamespace
 
 from app.database.models import User
 from app.database.repositories import (
@@ -6,7 +7,9 @@ from app.database.repositories import (
     get_or_create_user,
     get_user_by_telegram_id,
     is_admin,
+    list_admin_telegram_ids,
 )
+from app.router.admin.filters import AdminFilter
 from app.services.identity_service import seed_administrators
 
 
@@ -37,6 +40,43 @@ def test_seed_administrators_is_idempotent() -> None:
     assert user is not None
     assert admin.user_id == user.id
     assert asyncio.run(is_admin(222)) is True
+    assert asyncio.run(list_admin_telegram_ids()) == [222]
+
+
+def test_seed_administrators_adds_new_ids() -> None:
+    asyncio.run(seed_administrators([1001]))
+    asyncio.run(seed_administrators([1001, 1002]))
+
+    assert asyncio.run(is_admin(1001)) is True
+    assert asyncio.run(is_admin(1002)) is True
+    assert set(asyncio.run(list_admin_telegram_ids())) == {1001, 1002}
+
+
+def test_seed_administrators_removes_ids_dropped_from_config() -> None:
+    asyncio.run(seed_administrators([1001, 1002]))
+    asyncio.run(seed_administrators([1001]))
+
+    assert asyncio.run(get_admin_by_telegram_id(1001)) is not None
+    assert asyncio.run(get_admin_by_telegram_id(1002)) is None
+    assert asyncio.run(is_admin(1002)) is False
+    assert asyncio.run(list_admin_telegram_ids()) == [1001]
+
+
+def test_removed_admin_is_rejected_by_authorization() -> None:
+    asyncio.run(seed_administrators([1001, 1002]))
+    asyncio.run(seed_administrators([1001]))
+
+    message = SimpleNamespace(from_user=SimpleNamespace(id=1002))
+    assert asyncio.run(AdminFilter()(message)) is False
+
+
+def test_seed_administrators_clears_all_when_config_is_empty() -> None:
+    asyncio.run(seed_administrators([1001, 1002]))
+    asyncio.run(seed_administrators([]))
+
+    assert asyncio.run(list_admin_telegram_ids()) == []
+    assert asyncio.run(is_admin(1001)) is False
+    assert asyncio.run(is_admin(1002)) is False
 
 
 def test_is_admin_rejects_unknown_telegram_id() -> None:
