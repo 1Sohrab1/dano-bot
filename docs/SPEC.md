@@ -20,13 +20,15 @@ The current template includes:
 - persistent `User` and `Admin` records keyed by unique Telegram IDs
 - idempotent administrator seeding from `ADMIN_IDS` at startup
 - centralized admin authorization through `AdminFilter` and `admin_service`
+- content metadata persistence (`Content`) with unique deep-link codes
+- administrator upload of supported Telegram messages through the admin router
 - uv dependency and lockfile management
 - Docker and Compose deployment skeleton
 - basic `/start` and `/admin` example handlers
 - pytest and Ruff verification
 
-The current template does not implement content upload, deep links,
-membership enforcement, delivery, rate limiting, or a complete admin panel.
+The current template does not implement deep-link delivery, membership
+enforcement, rate limiting, or a complete admin panel.
 
 User identity stores only an internal id and `telegram_id`. After seeding,
 authorization looks up the `Admin` table rather than reading `ADMIN_IDS` in
@@ -216,7 +218,10 @@ observable outcomes rather than private implementation details.
 ## Open decisions
 
 - PostgreSQL migration timing and Alembic rollout.
-- Exact supported Telegram content types.
 - Membership policy when `REQUIRED_CHANNEL_ID` is unset.
 - Admin panel transport: Telegram-only first or a separate web application.
 - Rate-limit storage and strategy for multi-instance deployment.
+
+Supported Telegram content types for administrator upload are document, video,
+photo, audio, voice, animation, and video note. Other message types are rejected
+and are not persisted. Delivery of stored source messages is Stage 03.
