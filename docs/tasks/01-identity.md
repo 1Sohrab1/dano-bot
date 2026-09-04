@@ -1,6 +1,6 @@
 # Stage 01: Identity and Authorization
 
-Status: Planned
+Status: Done
 
 ## Objective
 
@@ -21,11 +21,11 @@ every future admin handler uses the same policy.
 
 ## Acceptance criteria
 
-- [ ] Repeated startup does not create duplicate administrators.
-- [ ] User identity is persisted without storing secrets.
-- [ ] Admin authorization is available through one reusable filter/service.
-- [ ] Handlers do not query SQLModel sessions directly.
-- [ ] SQLite tests pass with an isolated database.
+- [x] Repeated startup does not create duplicate administrators.
+- [x] User identity is persisted without storing secrets.
+- [x] Admin authorization is available through one reusable filter/service.
+- [x] Handlers do not query SQLModel sessions directly.
+- [x] SQLite tests pass with an isolated database.
 
 ## Verification
 

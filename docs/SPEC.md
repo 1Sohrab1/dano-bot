@@ -17,6 +17,9 @@ The current template includes:
 - aiogram dispatcher with separate `admin` and `user` routers
 - `pydantic-settings` configuration loaded from environment variables
 - asynchronous SQLModel/SQLite bootstrap
+- persistent `User` and `Admin` records keyed by unique Telegram IDs
+- idempotent administrator seeding from `ADMIN_IDS` at startup
+- centralized admin authorization through `AdminFilter` and `admin_service`
 - uv dependency and lockfile management
 - Docker and Compose deployment skeleton
 - basic `/start` and `/admin` example handlers
@@ -24,6 +27,10 @@ The current template includes:
 
 The current template does not implement content upload, deep links,
 membership enforcement, delivery, rate limiting, or a complete admin panel.
+
+User identity stores only an internal id and `telegram_id`. After seeding,
+authorization looks up the `Admin` table rather than reading `ADMIN_IDS` in
+handlers. `ADMIN_IDS` remains the bootstrap source of truth.
 
 ## Capability map
 
@@ -61,7 +68,8 @@ dependencies.
 - uses future administration workflows
 
 Administrator authorization must be centralized and must never be duplicated
-inside individual handlers.
+inside individual handlers. Admin routes use `AdminFilter`, which delegates to
+`admin_service.is_admin`.
 
 ## Core flows
 
