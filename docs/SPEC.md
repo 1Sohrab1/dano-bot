@@ -28,12 +28,14 @@ The current template includes:
 - administrator content-management workflows: bounded pagination, inline
   confirmation of activate/deactivate/delete, and relative-day expiration
   management, authorized through `AdminFilter` and `AdminCallbackQueryFilter`
+- configurable per-user rate limiting for user and admin flows through
+  `RateLimitMiddleware` and `rate_limit_service`
 - uv dependency and lockfile management
 - Docker and Compose deployment skeleton
 - basic `/start` and `/admin` example handlers
 - pytest and Ruff verification
 
-The current template does not implement rate limiting or a complete admin panel.
+The current template does not implement a complete admin panel.
 
 User identity stores only an internal id and `telegram_id`. After seeding,
 authorization looks up the `Admin` table rather than reading `ADMIN_IDS` in
@@ -129,9 +131,25 @@ Required environment values are documented in `.env.example`:
 - `REQUIRED_CHANNEL_ID` (optional; when unset or blank, membership is not
   enforced and delivery is not gated)
 - `DEBUG`
+- `RATE_LIMIT_ENABLED` (default `true`; when `false`, rate limiting is bypassed)
+- `RATE_LIMIT_USER_PER_MINUTE` (default `20`)
+- `RATE_LIMIT_ADMIN_PER_MINUTE` (default `60`)
 
 Secrets must remain outside version control. Configuration changes require an
 update to `.env.example` and the relevant documentation.
+
+## Rate limiting
+
+- Fixed-window counters keyed by `<scope>:<telegram_user_id>` with a 60-second
+  window, enforced by `RateLimitMiddleware` before handlers run.
+- Storage strategy: single-process in-memory counters (`InMemoryRateLimitStore`).
+  No external infrastructure. Counters are lost on restart and are not shared
+  between bot instances.
+- Storage failures fail open (the event is allowed and a warning is logged) so
+  a broken rate-limit backend can never take the bot offline. Exceeded limits
+  fail closed with a safe user-facing reply.
+- A shared backend (e.g. Redis) remains the documented path for multi-instance
+  deployment and is intentionally deferred.
 
 ## Project structure
 
@@ -140,6 +158,7 @@ app/
 ├── main.py
 ├── config.py
 ├── database/
+├── middlewares/
 ├── router/
 │   ├── admin/
 │   └── user/
@@ -225,7 +244,7 @@ observable outcomes rather than private implementation details.
 
 - PostgreSQL migration timing and Alembic rollout.
 - Admin panel transport: Telegram-only first or a separate web application.
-- Rate-limit storage and strategy for multi-instance deployment.
+- Shared rate-limit storage for multi-instance deployment.
 
 Supported Telegram content types for administrator upload are document, video,
 photo, audio, voice, animation, and video note. Other message types are rejected

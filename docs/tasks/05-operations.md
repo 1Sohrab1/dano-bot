@@ -1,11 +1,14 @@
 # Stage 05: Operations and Production Readiness
 
-Status: Planned
+Status: In Progress
 
 ## Objective
 
 Make the completed bot reproducible, observable, recoverable, and safe to
 operate in a containerized environment.
+
+This stage is split into separate reviewable PRs. Database migrations are
+tracked separately; this PR implements rate limiting only.
 
 ## Dependencies
 
@@ -15,7 +18,7 @@ operate in a containerized environment.
 
 - Add Alembic migrations for the supported database engines.
 - Verify PostgreSQL compatibility without changing service contracts.
-- Add configurable rate limiting with an explicit storage strategy.
+- [x] Add configurable rate limiting with an explicit storage strategy.
 - Add structured logging, health/startup diagnostics, and error monitoring
   hooks.
 - Document backup, restore, rollout, and rollback procedures.
@@ -26,7 +29,7 @@ operate in a containerized environment.
 - [ ] A fresh deployment can initialize or migrate the database reproducibly.
 - [ ] Application services work against SQLite tests and PostgreSQL integration
   tests.
-- [ ] Rate limits are configurable and fail safely under storage failure.
+- [x] Rate limits are configurable and fail safely under storage failure.
 - [ ] Logs contain actionable correlation context without tokens or user
   secrets.
 - [ ] CI blocks merges when required checks fail.
