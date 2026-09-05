@@ -36,7 +36,10 @@ The current template includes:
 - uv dependency and lockfile management
 - Docker and Compose deployment skeleton
 - basic `/start` and `/admin` example handlers
-- pytest and Ruff verification
+- pytest, Ruff, and ty verification
+- GitHub Actions CI (lint, tests, type checks, Compose validation, image build)
+- operational runbooks for backup, restore, rollout, and rollback in
+  `docs/operations/`
 
 The current template does not implement a complete admin panel.
 
@@ -121,7 +124,7 @@ belongs in repositories, and configuration belongs in `Settings`.
 - pydantic-settings
 - SQLModel with SQLAlchemy async engine
 - SQLite for the initial deployment; PostgreSQL compatibility is a requirement
-- pytest and Ruff
+- pytest, Ruff, and ty
 - Docker Compose
 
 ## Configuration
@@ -203,6 +206,7 @@ infrastructure must not contain feature-specific policy.
 uv sync
 uv run ruff check .
 uv run pytest
+uv run ty check app
 uv run python -m compileall -q app
 uv run python -m app.main
 docker compose up --build

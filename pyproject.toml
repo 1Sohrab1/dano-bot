@@ -17,6 +17,7 @@ dependencies = [
 dev = [
     "pytest",
     "ruff",
+    "ty>=0.0.78",
 ]
 
 [tool.pytest.ini_options]
@@ -25,3 +26,31 @@ pythonpath = ["."]
 [tool.ruff]
 target-version = "py313"
 line-length = 88
+
+[tool.ty]
+# Astral's Python type checker (same toolchain vendor as uv/ruff).
+# CI runs `uv run ty check app`. The per-file overrides below cover
+# pre-existing third-party typing limitations only; narrowing them would
+# require changing handler/database-layer logic, which is out of scope.
+
+[[tool.ty.overrides]]
+include = ["app/database/repositories.py"]
+
+[tool.ty.overrides.rules]
+# SQLModel exposes column operators on model attributes that its
+# annotations do not describe (e.g. `.desc()`, `func.count()`).
+unresolved-attribute = "ignore"
+invalid-assignment = "ignore"
+invalid-argument-type = "ignore"
+
+[[tool.ty.overrides]]
+include = [
+    "app/router/admin/handlers.py",
+    "app/router/admin/content/handlers.py",
+]
+
+[tool.ty.overrides.rules]
+# aiogram types event payloads more strictly than the runtime guarantees
+# relied on here (optional Bot, Message|InaccessibleMessage unions,
+# Optional datetimes); narrowing would change handler logic.
+unresolved-attribute = "ignore"
