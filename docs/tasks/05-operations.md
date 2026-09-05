@@ -1,6 +1,6 @@
 # Stage 05: Operations and Production Readiness
 
-Status: Planned
+Status: In Progress (Migrations complete)
 
 ## Objective
 
@@ -13,18 +13,18 @@ operate in a containerized environment.
 
 ## Scope
 
-- Add Alembic migrations for the supported database engines.
-- Verify PostgreSQL compatibility without changing service contracts.
-- Add configurable rate limiting with an explicit storage strategy.
-- Add structured logging, health/startup diagnostics, and error monitoring
+- [x] Add Alembic migrations for the supported database engines.
+- [x] Verify PostgreSQL compatibility without changing service contracts.
+- [ ] Add configurable rate limiting with an explicit storage strategy.
+- [ ] Add structured logging, health/startup diagnostics, and error monitoring
   hooks.
-- Document backup, restore, rollout, and rollback procedures.
-- Add CI checks for lint, tests, type checks, and Docker build.
+- [ ] Document backup, restore, rollout, and rollback procedures.
+- [ ] Add CI checks for lint, tests, type checks, and Docker build.
 
 ## Acceptance criteria
 
-- [ ] A fresh deployment can initialize or migrate the database reproducibly.
-- [ ] Application services work against SQLite tests and PostgreSQL integration
+- [x] A fresh deployment can initialize or migrate the database reproducibly.
+- [x] Application services work against SQLite tests and PostgreSQL integration
   tests.
 - [ ] Rate limits are configurable and fail safely under storage failure.
 - [ ] Logs contain actionable correlation context without tokens or user
