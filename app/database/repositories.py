@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import select
+from sqlmodel import func, select
 
 from app.database.database import get_session
 from app.database.models import Admin, Content, ContentState, User
@@ -166,6 +166,53 @@ async def _set_content_state(code: str, state: str) -> Content | None:
             return None
 
         content.state = state
+        session.add(content)
+        await session.commit()
+        await session.refresh(content)
+        return _normalize_content_datetimes(content)
+
+
+async def list_content(offset: int, limit: int) -> list[Content]:
+    async with get_session() as session:
+        result = await session.exec(
+            select(Content)
+            .order_by(Content.created_at.desc(), Content.id.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        return [_normalize_content_datetimes(content) for content in result.all()]
+
+
+async def count_content() -> int:
+    async with get_session() as session:
+        result = await session.exec(select(func.count(Content.id)))
+        return result.one()
+
+
+async def delete_content(code: str) -> Content | None:
+    async with get_session() as session:
+        result = await session.exec(select(Content).where(Content.code == code))
+        content = result.one_or_none()
+        if content is None:
+            return None
+
+        _normalize_content_datetimes(content)
+        await session.delete(content)
+        await session.commit()
+        return content
+
+
+async def update_content_expiration(
+    code: str,
+    expires_at: datetime | None,
+) -> Content | None:
+    async with get_session() as session:
+        result = await session.exec(select(Content).where(Content.code == code))
+        content = result.one_or_none()
+        if content is None:
+            return None
+
+        content.expires_at = expires_at
         session.add(content)
         await session.commit()
         await session.refresh(content)
