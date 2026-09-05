@@ -17,12 +17,12 @@ os.environ.setdefault("REQUIRED_CHANNEL_ID", "@test-channel")
 def reset_database() -> Iterator[None]:
     from sqlmodel import SQLModel
 
-    from app.database.database import engine, init_db
+    from app.database.database import engine, init_db_for_test
 
     async def reset() -> None:
         async with engine.begin() as connection:
             await connection.run_sync(SQLModel.metadata.drop_all)
-        await init_db()
+        await init_db_for_test()
 
     asyncio.run(reset())
     yield
