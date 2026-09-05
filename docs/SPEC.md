@@ -31,6 +31,8 @@ The current template includes:
 - configurable per-user rate limiting for user and admin flows through
   `RateLimitMiddleware` and `rate_limit_service`
 - reproducible database initialization and migration via Alembic (SQLite and PostgreSQL)
+- centralized logging configuration, startup diagnostics, and database
+  health checks through `app/logging.py` and `health_service`
 - uv dependency and lockfile management
 - Docker and Compose deployment skeleton
 - basic `/start` and `/admin` example handlers
@@ -135,6 +137,8 @@ Required environment values are documented in `.env.example`:
 - `RATE_LIMIT_ENABLED` (default `true`; when `false`, rate limiting is bypassed)
 - `RATE_LIMIT_USER_PER_MINUTE` (default `20`)
 - `RATE_LIMIT_ADMIN_PER_MINUTE` (default `60`)
+- `LOG_LEVEL` (default `INFO`; one of `DEBUG`, `INFO`, `WARNING`, `ERROR`,
+  `CRITICAL`, case-insensitive)
 
 Secrets must remain outside version control. Configuration changes require an
 update to `.env.example` and the relevant documentation.
@@ -151,6 +155,22 @@ update to `.env.example` and the relevant documentation.
   fail closed with a safe user-facing reply.
 - A shared backend (e.g. Redis) remains the documented path for multi-instance
   deployment and is intentionally deferred.
+
+## Logging, startup, and health
+
+- Logging is configured once at startup via `app/logging.py` using the
+  standard `logging` module; log records follow the existing `event=...`
+  key=value style.
+- Startup emits milestone logs (`application_starting`,
+  `database_initialization_starting/completed`, `application_ready`) and marks
+  the process `starting` → `ready` (`ApplicationStatus` in `health_service`).
+  Startup failures are logged with a traceback, mark the state `failed`, and
+  re-raise so the bot never runs in a broken state silently.
+- `health_service.check_database()` verifies connectivity with a lightweight
+  `SELECT 1` on the existing async engine; `check_health()` combines it with
+  readiness into a `HealthReport` for future deployment probes.
+- Logs never include the bot token, database credentials, connection strings,
+  or other secrets.
 
 ## Project structure
 
