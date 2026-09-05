@@ -111,8 +111,10 @@ def test_check_health_report_when_database_down(monkeypatch) -> None:
 
     report = asyncio.run(check_health(status))
 
-    assert report.ready is True
+    assert status.state == ApplicationState.FAILED
+    assert report.ready is False
     assert report.database is False
+    assert report.state == ApplicationState.FAILED
     assert report.healthy is False
 
 

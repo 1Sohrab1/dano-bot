@@ -68,8 +68,14 @@ async def check_database() -> bool:
 async def check_health(
     status: ApplicationStatus = application_status,
 ) -> HealthReport:
-    """Build a health report suitable for future deployment probes."""
+    """Build a health report suitable for future deployment probes.
+
+    A failed database check marks the supplied status as failed so the
+    application can never report itself ready while unhealthy.
+    """
     database_ok = await check_database()
+    if not database_ok:
+        status.mark_failed()
     return HealthReport(
         ready=status.is_ready, database=database_ok, state=status.state
     )
