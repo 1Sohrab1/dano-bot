@@ -22,13 +22,15 @@ The current template includes:
 - centralized admin authorization through `AdminFilter` and `admin_service`
 - content metadata persistence (`Content`) with unique deep-link codes
 - administrator upload of supported Telegram messages through the admin router
+- deep-link delivery of stored content through `/start <code>`
+- membership enforcement through an application service when `REQUIRED_CHANNEL_ID`
+  is set
 - uv dependency and lockfile management
 - Docker and Compose deployment skeleton
 - basic `/start` and `/admin` example handlers
 - pytest and Ruff verification
 
-The current template does not implement deep-link delivery, membership
-enforcement, rate limiting, or a complete admin panel.
+The current template does not implement rate limiting or a complete admin panel.
 
 User identity stores only an internal id and `telegram_id`. After seeding,
 authorization looks up the `Admin` table rather than reading `ADMIN_IDS` in
@@ -121,7 +123,8 @@ Required environment values are documented in `.env.example`:
 - `BOT_TOKEN`
 - `ADMIN_IDS`
 - `DATABASE_URL`
-- `REQUIRED_CHANNEL_ID`
+- `REQUIRED_CHANNEL_ID` (optional; when unset or blank, membership is not
+  enforced and delivery is not gated)
 - `DEBUG`
 
 Secrets must remain outside version control. Configuration changes require an
@@ -218,7 +221,6 @@ observable outcomes rather than private implementation details.
 ## Open decisions
 
 - PostgreSQL migration timing and Alembic rollout.
-- Membership policy when `REQUIRED_CHANNEL_ID` is unset.
 - Admin panel transport: Telegram-only first or a separate web application.
 - Rate-limit storage and strategy for multi-instance deployment.
 

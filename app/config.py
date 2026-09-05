@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     bot_token: str
     admin_ids: list[int]
     database_url: str
-    required_channel_id: str
+    required_channel_id: str | None = None
     debug: bool = False
 
     model_config = SettingsConfigDict(

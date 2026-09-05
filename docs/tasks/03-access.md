@@ -1,6 +1,6 @@
 # Stage 03: Access and Delivery
 
-Status: Planned
+Status: Done
 
 ## Objective
 
@@ -22,11 +22,11 @@ Telegram message to an eligible user.
 
 ## Acceptance criteria
 
-- [ ] Invalid, inactive, and expired codes produce safe user-facing messages.
-- [ ] Membership is checked before delivery when a channel is configured.
-- [ ] A valid eligible request delivers exactly the stored source message.
-- [ ] Telegram failures are logged with safe context and return a generic message.
-- [ ] Access policy and delivery behavior are covered by focused tests.
+- [x] Invalid, inactive, and expired codes produce safe user-facing messages.
+- [x] Membership is checked before delivery when a channel is configured.
+- [x] A valid eligible request delivers exactly the stored source message.
+- [x] Telegram failures are logged with safe context and return a generic message.
+- [x] Access policy and delivery behavior are covered by focused tests.
 
 ## Verification
 
