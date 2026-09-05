@@ -25,6 +25,9 @@ The current template includes:
 - deep-link delivery of stored content through `/start <code>`
 - membership enforcement through an application service when `REQUIRED_CHANNEL_ID`
   is set
+- administrator content-management workflows: bounded pagination, inline
+  confirmation of activate/deactivate/delete, and relative-day expiration
+  management, authorized through `AdminFilter` and `AdminCallbackQueryFilter`
 - uv dependency and lockfile management
 - Docker and Compose deployment skeleton
 - basic `/start` and `/admin` example handlers

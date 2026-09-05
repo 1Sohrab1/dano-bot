@@ -1,6 +1,6 @@
 # Stage 04: Administration Workflows
 
-Status: Planned
+Status: Done
 
 ## Objective
 
@@ -23,11 +23,11 @@ coupling management policy to the router or database layer.
 
 ## Acceptance criteria
 
-- [ ] Every admin command passes centralized authorization.
-- [ ] Content lists are bounded and stable under pagination.
-- [ ] Destructive actions require explicit confirmation and are auditable.
-- [ ] Invalid state transitions return safe, useful responses.
-- [ ] Admin handlers remain thin and delegate to application services.
+- [x] Every admin command passes centralized authorization.
+- [x] Content lists are bounded and stable under pagination.
+- [x] Destructive actions require explicit confirmation and are auditable.
+- [x] Invalid state transitions return safe, useful responses.
+- [x] Admin handlers remain thin and delegate to application services.
 
 ## Verification
 

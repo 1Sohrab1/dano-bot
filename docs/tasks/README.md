@@ -12,7 +12,7 @@ order.
 | 01 | [Identity and authorization](./01-identity.md) | Done | 00 |
 | 02 | [Content persistence and upload](./02-content.md) | Planned | 01 |
 | 03 | [Access and delivery](./03-access.md) | Done | 02 |
-| 04 | [Administration workflows](./04-administration.md) | Planned | 01, 02 |
+| 04 | [Administration workflows](./04-administration.md) | Done | 01, 02 |
 | 05 | [Operations and production readiness](./05-operations.md) | Planned | 01–04 |
 
 ## PR rules
