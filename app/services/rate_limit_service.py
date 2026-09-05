@@ -8,6 +8,13 @@ RATE_LIMIT_WINDOW_SECONDS = 60
 MAX_TRACKED_KEYS = 100_000
 
 
+class RateLimitStoreFullError(Exception):
+    """Raised when the store is at capacity and cannot track a new key.
+
+    Handled by `is_allowed()`, which fails open so the bot stays available.
+    """
+
+
 class InMemoryRateLimitStore:
     """Fixed-window in-memory counter store.
 
@@ -15,6 +22,12 @@ class InMemoryRateLimitStore:
     ``"<scope>:<telegram_user_id>"`` and reset when the window elapses.
     This is intentionally simple: no external infrastructure, no shared
     state between bot instances, and counters are lost on restart.
+
+    Capacity policy: at most ``MAX_TRACKED_KEYS`` buckets are tracked. When
+    a new key arrives at capacity, expired buckets are pruned first; if the
+    store is still full, the new key is rejected with
+    `RateLimitStoreFullError` and the event is allowed (fail open). Active
+    buckets are never evicted.
     """
 
     def __init__(self) -> None:
@@ -26,14 +39,23 @@ class InMemoryRateLimitStore:
     ) -> int:
         current = time.monotonic() if now is None else now
         async with self._lock:
-            start, count = self._buckets.get(key, (current, 0))
-            if current - start >= window_seconds:
-                start, count = current, 0
-            count += 1
-            if key not in self._buckets and len(self._buckets) >= MAX_TRACKED_KEYS:
+            if key in self._buckets:
+                start, count = self._buckets[key]
+                if current - start >= window_seconds:
+                    start, count = current, 0
+                count += 1
+                self._buckets[key] = (start, count)
+                return count
+
+            if len(self._buckets) >= MAX_TRACKED_KEYS:
                 self._prune_expired(current, window_seconds)
-            self._buckets[key] = (start, count)
-            return count
+                if len(self._buckets) >= MAX_TRACKED_KEYS:
+                    raise RateLimitStoreFullError(
+                        "rate limit store capacity exceeded"
+                    )
+
+            self._buckets[key] = (current, 1)
+            return 1
 
     def _prune_expired(self, current: float, window_seconds: int) -> None:
         expired = [

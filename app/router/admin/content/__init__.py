@@ -6,7 +6,6 @@ from .router import content_admin
 
 content_admin.message.filter(AdminFilter())
 content_admin.callback_query.filter(AdminCallbackQueryFilter())
-content_admin.message.middleware(RateLimitMiddleware(scope=ADMIN_SCOPE))
 content_admin.callback_query.middleware(RateLimitMiddleware(scope=ADMIN_SCOPE))
 
 __all__ = ["content_admin", "handlers"]

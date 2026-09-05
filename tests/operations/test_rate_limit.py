@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from aiogram.dispatcher.middlewares.manager import MiddlewareManager
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types import CallbackQuery, Message
 
@@ -18,7 +19,10 @@ from app.router.admin import admins
 from app.router.admin.content import content_admin
 from app.router.user import users
 from app.services import rate_limit_service
-from app.services.rate_limit_service import InMemoryRateLimitStore
+from app.services.rate_limit_service import (
+    InMemoryRateLimitStore,
+    RateLimitStoreFullError,
+)
 
 
 def _fresh_store() -> InMemoryRateLimitStore:
@@ -317,5 +321,95 @@ def test_rate_limit_middleware_registered_on_routers() -> None:
 
     assert user_scopes == [USER_SCOPE]
     assert admin_scopes == [ADMIN_SCOPE]
-    assert content_message_scopes == [ADMIN_SCOPE]
+    # content_admin.message relies on the parent admins.message middleware
+    # (aiogram resolves parent router middlewares into the child chain),
+    # so it must not register its own copy.
+    assert content_message_scopes == []
     assert content_callback_scopes == [ADMIN_SCOPE]
+
+
+def test_admin_content_message_consumes_single_increment(monkeypatch) -> None:
+    """Drive the middleware chain aiogram resolves for content_admin.message.
+
+    With an admin limit of 1, the first content message must be allowed.
+    Before the duplicate-registration fix, the parent and child middlewares
+    each incremented the counter, so even the first message was blocked.
+    """
+    monkeypatch.setattr(settings, "rate_limit_admin_per_minute", 1)
+    monkeypatch.setattr(
+        rate_limit_service, "_default_store", InMemoryRateLimitStore()
+    )
+
+    chain = MiddlewareManager.wrap_middlewares(
+        content_admin.message._resolve_middlewares(),
+        AsyncMock(return_value="handled"),
+    )
+    event = SimpleNamespace(from_user=SimpleNamespace(id=9001))
+    event.answer = AsyncMock()
+
+    assert asyncio.run(chain(event, {})) == "handled"
+    event.answer.assert_not_awaited()
+
+
+def test_store_enforces_hard_capacity_bound(monkeypatch) -> None:
+    monkeypatch.setattr(rate_limit_service, "MAX_TRACKED_KEYS", 3)
+    store = _fresh_store()
+
+    for user_id in (201, 202, 203):
+        assert (
+            asyncio.run(store.increment(f"user:{user_id}", 60, now=1000.0)) == 1
+        )
+
+    with pytest.raises(RateLimitStoreFullError):
+        asyncio.run(store.increment("user:204", 60, now=1000.0))
+
+    assert len(store._buckets) == 3
+
+
+def test_capacity_failure_fails_open_through_is_allowed(
+    monkeypatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setattr(rate_limit_service, "MAX_TRACKED_KEYS", 2)
+    store = _fresh_store()
+    for user_id in (301, 302):
+        asyncio.run(store.increment(f"user:{user_id}", 60, now=1000.0))
+
+    with caplog.at_level(logging.WARNING):
+        allowed = asyncio.run(
+            rate_limit_service.is_allowed(
+                scope="user", user_id=303, limit=1, store=store, now=1000.0
+            )
+        )
+
+    assert allowed is True
+    assert "event=rate_limit_store_failed" in caplog.text
+    assert "RateLimitStoreFullError" in caplog.text
+    assert len(store._buckets) == 2
+
+
+def test_existing_keys_keep_working_at_capacity(monkeypatch) -> None:
+    monkeypatch.setattr(rate_limit_service, "MAX_TRACKED_KEYS", 2)
+    store = _fresh_store()
+    for user_id in (401, 402):
+        asyncio.run(store.increment(f"user:{user_id}", 60, now=1000.0))
+
+    assert asyncio.run(store.increment("user:401", 60, now=1000.0)) == 2
+    assert (
+        asyncio.run(
+            rate_limit_service.is_allowed(
+                scope="user", user_id=401, limit=5, store=store, now=1000.0
+            )
+        )
+        is True
+    )
+    assert len(store._buckets) == 2
+
+
+def test_expired_keys_are_pruned_to_admit_new_keys(monkeypatch) -> None:
+    monkeypatch.setattr(rate_limit_service, "MAX_TRACKED_KEYS", 2)
+    store = _fresh_store()
+    for user_id in (501, 502):
+        asyncio.run(store.increment(f"user:{user_id}", 60, now=1000.0))
+
+    assert asyncio.run(store.increment("user:503", 60, now=2000.0)) == 1
+    assert len(store._buckets) <= 2
