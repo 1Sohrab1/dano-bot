@@ -16,7 +16,7 @@ The current template includes:
 
 - aiogram dispatcher with separate `admin` and `user` routers
 - `pydantic-settings` configuration loaded from environment variables
-- asynchronous SQLModel/SQLite bootstrap
+- asynchronous SQLModel/SQLite bootstrap with Alembic migrations
 - persistent `User` and `Admin` records keyed by unique Telegram IDs
 - idempotent administrator seeding from `ADMIN_IDS` at startup
 - centralized admin authorization through `AdminFilter` and `admin_service`
@@ -28,6 +28,7 @@ The current template includes:
 - administrator content-management workflows: bounded pagination, inline
   confirmation of activate/deactivate/delete, and relative-day expiration
   management, authorized through `AdminFilter` and `AdminCallbackQueryFilter`
+- reproducible database initialization and migration via Alembic (SQLite and PostgreSQL)
 - uv dependency and lockfile management
 - Docker and Compose deployment skeleton
 - basic `/start` and `/admin` example handlers
