@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -10,6 +11,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.config import settings
 from app.database import models as _models  # noqa: F401
+
+logger = logging.getLogger(__name__)
 
 
 def _sync_database_url() -> str:
@@ -50,11 +53,13 @@ def _alembic_config() -> Config:
 
 def run_migrations() -> None:
     """Run database migrations using a synchronous engine."""
+    logger.info("event=database_migration_started")
     config = _alembic_config()
     sync_engine = create_engine(_sync_database_url())
     with sync_engine.connect() as connection:
         config.attributes["connection"] = connection
         command.upgrade(config, "head")
+    logger.info("event=database_migration_completed")
 
 
 async def init_db() -> None:

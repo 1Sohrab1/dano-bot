@@ -19,7 +19,7 @@ rate limiting, and the remaining observability/CI work).
 - [x] Add Alembic migrations for the supported database engines.
 - [x] Verify PostgreSQL compatibility without changing service contracts.
 - [x] Add configurable rate limiting with an explicit storage strategy.
-- [ ] Add structured logging, health/startup diagnostics, and error monitoring
+- [x] Add structured logging, health/startup diagnostics, and error monitoring
   hooks.
 - [ ] Document backup, restore, rollout, and rollback procedures.
 - [ ] Add CI checks for lint, tests, type checks, and Docker build.
@@ -30,7 +30,7 @@ rate limiting, and the remaining observability/CI work).
 - [x] Application services work against SQLite tests and PostgreSQL integration
   tests.
 - [x] Rate limits are configurable and fail safely under storage failure.
-- [ ] Logs contain actionable correlation context without tokens or user
+- [x] Logs contain actionable correlation context without tokens or user
   secrets.
 - [ ] CI blocks merges when required checks fail.
 - [ ] Deployment and recovery runbooks are checked into the repository.
