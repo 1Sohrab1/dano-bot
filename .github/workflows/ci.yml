@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: lint, tests, types, and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install locked dependencies
+        run: uv sync --locked
+
+      - name: Run Ruff
+        run: uv run ruff check .
+
+      - name: Run pytest
+        run: uv run pytest
+
+      - name: Run ty
+        run: uv run ty check app
+
+      - name: Provide placeholder runtime env for Compose validation
+        run: |
+          cat > .env <<'EOF'
+          BOT_TOKEN=ci-placeholder-token
+          ADMIN_IDS=[123456789]
+          DATABASE_URL=sqlite+aiosqlite:///./data/dano.db
+          REQUIRED_CHANNEL_ID=
+          DEBUG=false
+LOG_LEVEL=INFO
+          EOF
+
+      - name: Validate Compose configuration
+        run: docker compose config -q
+
+      - name: Build Docker image
+        run: docker build --tag dano-bot:ci .

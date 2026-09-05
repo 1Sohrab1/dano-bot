@@ -1,6 +1,6 @@
 # Stage 05: Operations and Production Readiness
 
-Status: In Progress
+Status: Done
 
 ## Objective
 
@@ -21,8 +21,8 @@ rate limiting, and the remaining observability/CI work).
 - [x] Add configurable rate limiting with an explicit storage strategy.
 - [x] Add structured logging, health/startup diagnostics, and error monitoring
   hooks.
-- [ ] Document backup, restore, rollout, and rollback procedures.
-- [ ] Add CI checks for lint, tests, type checks, and Docker build.
+- [x] Document backup, restore, rollout, and rollback procedures.
+- [x] Add CI checks for lint, tests, type checks, and Docker build.
 
 ## Acceptance criteria
 
@@ -32,14 +32,15 @@ rate limiting, and the remaining observability/CI work).
 - [x] Rate limits are configurable and fail safely under storage failure.
 - [x] Logs contain actionable correlation context without tokens or user
   secrets.
-- [ ] CI blocks merges when required checks fail.
-- [ ] Deployment and recovery runbooks are checked into the repository.
+- [x] CI blocks merges when required checks fail.
+- [x] Deployment and recovery runbooks are checked into the repository.
 
 ## Verification
 
 ```bash
 uv run ruff check .
 uv run pytest
+uv run ty check app
 docker compose config -q
 docker build --tag dano-bot:ci .
 ```
