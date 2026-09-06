@@ -11,7 +11,6 @@ class Settings(BaseSettings):
     admin_ids: list[int]
     database_url: str
     required_channel_id: str | None = None
-    required_channel_url: str | None = None
     debug: bool = False
     rate_limit_enabled: bool = True
     rate_limit_user_per_minute: int = Field(default=20, ge=1)

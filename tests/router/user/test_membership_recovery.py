@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
+from aiogram.exceptions import TelegramAPIError
 
 from app.router.user import handlers
 from app.router.user.callbacks import MembershipCheck
@@ -12,15 +13,16 @@ from app.router.user.handlers import (
     MEMBERSHIP_PENDING_REPLY,
     MEMBERSHIP_REQUIRED_REPLY,
     MEMBERSHIP_RESOLVED_REPLY,
-    _channel_url,
     content_deep_link_handler,
     membership_check_callback,
 )
 from app.router.user.keyboards import membership_keyboard
+from app.services import channel_service
 from app.services.access_service import (
     ContentInactiveError,
     MembershipRequiredError,
 )
+from app.services.channel_service import resolve_required_channel_url
 
 
 def _make_message(bot: object, from_user_id: int) -> tuple[SimpleNamespace, dict]:
@@ -83,34 +85,75 @@ def test_membership_keyboard_omits_join_button_without_channel() -> None:
 def test_public_channel_username_builds_public_url(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(handlers.settings, "required_channel_id", "@my_channel")
-    monkeypatch.setattr(handlers.settings, "required_channel_url", None)
+    monkeypatch.setattr(channel_service.settings, "required_channel_id", "@my_channel")
 
-    assert _channel_url() == "https://t.me/my_channel"
+    assert asyncio.run(resolve_required_channel_url(SimpleNamespace())) == (
+        "https://t.me/my_channel"
+    )
 
 
-def test_numeric_channel_uses_configured_url(
+def test_numeric_channel_uses_resolved_public_url(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        handlers.settings, "required_channel_id", "-1001234567890"
+        channel_service.settings, "required_channel_id", "-1001234567890"
     )
-    monkeypatch.setattr(
-        handlers.settings, "required_channel_url", "https://t.me/example_channel"
+    bot = AsyncMock()
+    bot.get_chat.return_value = SimpleNamespace(
+        username="example_channel", invite_link=None
     )
 
-    assert _channel_url() == "https://t.me/example_channel"
+    assert asyncio.run(resolve_required_channel_url(bot)) == (
+        "https://t.me/example_channel"
+    )
+    bot.get_chat.assert_awaited_once_with(chat_id="-1001234567890")
 
 
-def test_numeric_channel_without_url_has_no_join_url(
+def test_numeric_channel_retries_after_telegram_api_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        handlers.settings, "required_channel_id", "-1001234567890"
+        channel_service.settings, "required_channel_id", "-1001234567890"
     )
-    monkeypatch.setattr(handlers.settings, "required_channel_url", " ")
+    bot = AsyncMock()
+    bot.get_chat.side_effect = [
+        TelegramAPIError(method="getChat", message="temporary failure"),
+        SimpleNamespace(username="retry_channel", invite_link=None),
+    ]
 
-    assert _channel_url() is None
+    assert asyncio.run(resolve_required_channel_url(bot)) is None
+    assert asyncio.run(resolve_required_channel_url(bot)) == (
+        "https://t.me/retry_channel"
+    )
+    assert bot.get_chat.await_count == 2
+
+
+def test_numeric_private_channel_without_url_has_no_join_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        channel_service.settings, "required_channel_id", "-1001234567890"
+    )
+    bot = AsyncMock()
+    bot.get_chat.return_value = SimpleNamespace(username=None, invite_link=None)
+
+    assert asyncio.run(resolve_required_channel_url(bot)) is None
+
+
+def test_numeric_channel_uses_resolved_invite_link(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        channel_service.settings, "required_channel_id", "-1001234567890"
+    )
+    bot = AsyncMock()
+    bot.get_chat.return_value = SimpleNamespace(
+        username=None, invite_link="https://t.me/+exampleinvite"
+    )
+
+    assert asyncio.run(resolve_required_channel_url(bot)) == (
+        "https://t.me/+exampleinvite"
+    )
 
 
 def test_membership_callback_data_round_trip() -> None:
@@ -140,13 +183,15 @@ def test_deep_link_membership_required_shows_recovery_prompt(
     assert unpacked.code == "code1234"
 
 
-def test_numeric_channel_without_url_keeps_membership_recheck(
+def test_numeric_private_channel_keeps_membership_recheck(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    bot = SimpleNamespace()
+    bot = AsyncMock()
     message, recorded = _make_message(bot, from_user_id=777)
-    monkeypatch.setattr(handlers.settings, "required_channel_id", "-1001234567890")
-    monkeypatch.setattr(handlers.settings, "required_channel_url", None)
+    monkeypatch.setattr(
+        channel_service.settings, "required_channel_id", "-1001234567890"
+    )
+    bot.get_chat.return_value = SimpleNamespace(username=None, invite_link=None)
     monkeypatch.setattr(
         handlers,
         "deliver_content",
@@ -158,7 +203,6 @@ def test_numeric_channel_without_url_keeps_membership_recheck(
     rows = recorded["reply_markup"].inline_keyboard
     assert len(rows) == 1
     assert rows[0][0].text == "بررسی عضویت"
-    assert rows[0][0].url is None
     assert MembershipCheck.unpack(rows[0][0].callback_data).code == "code1234"
 
 

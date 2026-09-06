@@ -3,7 +3,6 @@ from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import CommandObject, CommandStart
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
 
-from app.config import settings
 from app.services.access_service import (
     ContentExpiredError,
     ContentInactiveError,
@@ -13,6 +12,7 @@ from app.services.access_service import (
     MembershipRequiredError,
     deliver_content,
 )
+from app.services.channel_service import resolve_required_channel_url
 from app.services.identity_service import ensure_user
 
 from .callbacks import MembershipCheck, UserNav, UserNavAction
@@ -57,17 +57,6 @@ async def _show_screen(
     await query.answer()
 
 
-def _channel_url() -> str | None:
-    channel = settings.required_channel_id
-    if channel is None or not channel.strip():
-        return None
-    channel = channel.strip()
-    if channel.startswith("@"):
-        return f"https://t.me/{channel[1:]}"
-    configured_url = settings.required_channel_url
-    return configured_url.strip() if configured_url and configured_url.strip() else None
-
-
 @users.message(CommandStart(deep_link=False))
 async def start_handler(message: Message) -> None:
     if message.from_user is not None:
@@ -102,7 +91,7 @@ async def content_deep_link_handler(message: Message, command: CommandObject) ->
             MEMBERSHIP_REQUIRED_REPLY,
             reply_markup=membership_keyboard(
                 command.args or "",
-                _channel_url(),
+                await resolve_required_channel_url(message.bot),
             ),
         )
     except DeliveryError:
