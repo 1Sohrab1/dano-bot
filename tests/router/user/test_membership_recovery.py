@@ -12,6 +12,7 @@ from app.router.user.handlers import (
     MEMBERSHIP_PENDING_REPLY,
     MEMBERSHIP_REQUIRED_REPLY,
     MEMBERSHIP_RESOLVED_REPLY,
+    _channel_url,
     content_deep_link_handler,
     membership_check_callback,
 )
@@ -79,6 +80,39 @@ def test_membership_keyboard_omits_join_button_without_channel() -> None:
     assert rows[0][0].text == "بررسی عضویت"
 
 
+def test_public_channel_username_builds_public_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(handlers.settings, "required_channel_id", "@my_channel")
+    monkeypatch.setattr(handlers.settings, "required_channel_url", None)
+
+    assert _channel_url() == "https://t.me/my_channel"
+
+
+def test_numeric_channel_uses_configured_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        handlers.settings, "required_channel_id", "-1001234567890"
+    )
+    monkeypatch.setattr(
+        handlers.settings, "required_channel_url", "https://t.me/example_channel"
+    )
+
+    assert _channel_url() == "https://t.me/example_channel"
+
+
+def test_numeric_channel_without_url_has_no_join_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        handlers.settings, "required_channel_id", "-1001234567890"
+    )
+    monkeypatch.setattr(handlers.settings, "required_channel_url", " ")
+
+    assert _channel_url() is None
+
+
 def test_membership_callback_data_round_trip() -> None:
     assert MembershipCheck.unpack(MembershipCheck(code="code1234").pack()).code == "code1234"
 
@@ -104,6 +138,28 @@ def test_deep_link_membership_required_shows_recovery_prompt(
     assert rows[1][0].text == "بررسی عضویت"
     unpacked = MembershipCheck.unpack(rows[1][0].callback_data)
     assert unpacked.code == "code1234"
+
+
+def test_numeric_channel_without_url_keeps_membership_recheck(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    bot = SimpleNamespace()
+    message, recorded = _make_message(bot, from_user_id=777)
+    monkeypatch.setattr(handlers.settings, "required_channel_id", "-1001234567890")
+    monkeypatch.setattr(handlers.settings, "required_channel_url", None)
+    monkeypatch.setattr(
+        handlers,
+        "deliver_content",
+        AsyncMock(side_effect=MembershipRequiredError("code1234")),
+    )
+
+    asyncio.run(content_deep_link_handler(message, SimpleNamespace(args="code1234")))
+
+    rows = recorded["reply_markup"].inline_keyboard
+    assert len(rows) == 1
+    assert rows[0][0].text == "بررسی عضویت"
+    assert rows[0][0].url is None
+    assert MembershipCheck.unpack(rows[0][0].callback_data).code == "code1234"
 
 
 def test_membership_retry_resumes_delivery_on_success(

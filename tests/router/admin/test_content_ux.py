@@ -3,6 +3,8 @@ from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+import pytest
+
 from app.database.models import ContentState
 from app.database.repositories import create_content, get_content_by_code
 from app.router.admin.content.callbacks import ContentUx, ContentUxAction
@@ -11,6 +13,7 @@ from app.router.admin.content.handlers import (
     CONTENT_NOT_FOUND_REPLY,
     DELETE_CONFIRM_TEXT,
     EXPIRATION_PROMPT_TEXT,
+    INVALID_CODE_REPLY,
     INVALID_EXPIRATION_INPUT_REPLY,
     INVALID_EXPIRATION_VALUE_REPLY,
     INVALID_REQUEST_REPLY,
@@ -76,18 +79,16 @@ def _make_query() -> tuple[SimpleNamespace, dict]:
         recorded["edit_text"] = text
         recorded["edit_markup"] = reply_markup
 
-    return (
-        SimpleNamespace(
+    query = SimpleNamespace(
             from_user=SimpleNamespace(id=123456789),
             message=SimpleNamespace(
                 edit_text=edit_text,
                 message_id=100,
                 chat=SimpleNamespace(id=123456789),
             ),
-            answer=answer,
-        ),
-        recorded,
+            answer=AsyncMock(side_effect=answer),
     )
+    return query, recorded
 
 
 def _make_message(text: str) -> tuple[SimpleNamespace, dict]:
@@ -241,6 +242,31 @@ def test_detail_renders_exact_spec_format() -> None:
     assert "نوع: document" in recorded["edit_text"]
     assert "وضعیت: فعال" in recorded["edit_text"]
     assert "انقضا: 2030-01-01 00:00" in recorded["edit_text"]
+
+
+@pytest.mark.parametrize(
+    ("action", "code", "expected_reply"),
+    [
+        (ContentUxAction.DETAIL, "", INVALID_CODE_REPLY),
+        (ContentUxAction.DETAIL, "missing-detail", CONTENT_NOT_FOUND_REPLY),
+        (ContentUxAction.DELETE_START, "", INVALID_CODE_REPLY),
+        (ContentUxAction.DELETE_START, "missing-delete", CONTENT_NOT_FOUND_REPLY),
+    ],
+)
+def test_invalid_or_missing_content_answers_callback_once(
+    action: ContentUxAction,
+    code: str,
+    expected_reply: str,
+) -> None:
+    query, _ = _make_query()
+
+    asyncio.run(
+        content_ux_callback(
+            query, ContentUx(action=action, code=code, page=1), FakeState()
+        )
+    )
+
+    query.answer.assert_awaited_once_with(expected_reply)
 
 
 def test_active_detail_offers_active_action_set() -> None:

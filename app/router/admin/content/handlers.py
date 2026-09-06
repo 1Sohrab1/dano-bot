@@ -254,38 +254,40 @@ async def _render_page(query: CallbackQuery, page_value: int | str) -> None:
     await query.answer()
 
 
-async def _render_detail(query: CallbackQuery, code: str, page: int) -> None:
+async def _render_detail(query: CallbackQuery, code: str, page: int) -> bool:
     try:
         content = await content_management_service.preview_content(code)
     except InvalidContentCodeError:
         await query.answer(INVALID_CODE_REPLY)
-        return
+        return False
     except ContentNotFoundError:
         await query.answer(CONTENT_NOT_FOUND_REPLY)
-        return
+        return False
 
     await _edit_text(
         query,
         format_content_detail(content),
         content_detail_keyboard(content, page),
     )
+    return True
 
 
-async def _render_delete_confirm(query: CallbackQuery, code: str, page: int) -> None:
+async def _render_delete_confirm(query: CallbackQuery, code: str, page: int) -> bool:
     try:
         content = await content_management_service.preview_content(code)
     except InvalidContentCodeError:
         await query.answer(INVALID_CODE_REPLY)
-        return
+        return False
     except ContentNotFoundError:
         await query.answer(CONTENT_NOT_FOUND_REPLY)
-        return
+        return False
 
     await _edit_text(
         query,
         DELETE_CONFIRM_TEXT,
         delete_confirm_keyboard(content.code, page),
     )
+    return True
 
 
 async def _run_state_mutation(
@@ -385,8 +387,8 @@ async def content_ux_callback(
         await _render_page(query, page)
         return
     if action == ContentUxAction.DETAIL:
-        await _render_detail(query, code, page)
-        await query.answer()
+        if await _render_detail(query, code, page):
+            await query.answer()
         return
     if action == ContentUxAction.ACTIVATE:
         await _run_state_mutation(query, "activate", code, page)
@@ -395,8 +397,8 @@ async def content_ux_callback(
         await _run_state_mutation(query, "deactivate", code, page)
         return
     if action == ContentUxAction.DELETE_START:
-        await _render_delete_confirm(query, code, page)
-        await query.answer()
+        if await _render_delete_confirm(query, code, page):
+            await query.answer()
         return
     if action == ContentUxAction.DELETE_CONFIRM:
         await _confirm_delete(query, code)

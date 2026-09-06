@@ -64,7 +64,8 @@ def _channel_url() -> str | None:
     channel = channel.strip()
     if channel.startswith("@"):
         return f"https://t.me/{channel[1:]}"
-    return f"https://t.me/c/{channel.lstrip('-')}"
+    configured_url = settings.required_channel_url
+    return configured_url.strip() if configured_url and configured_url.strip() else None
 
 
 @users.message(CommandStart(deep_link=False))
