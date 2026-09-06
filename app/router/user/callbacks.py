@@ -10,3 +10,7 @@ class UserNavAction(StrEnum):
 
 class UserNav(CallbackData, prefix="usernav"):
     action: UserNavAction
+
+
+class MembershipCheck(CallbackData, prefix="membership"):
+    code: str

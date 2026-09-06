@@ -31,8 +31,9 @@ from app.services.access_service import (
 def _make_message(bot: object, from_user_id: int) -> tuple[SimpleNamespace, dict[str, str]]:
     recorded: dict[str, str] = {}
 
-    async def answer(text: str) -> None:
+    async def answer(text: str, reply_markup=None) -> None:
         recorded["text"] = text
+        recorded["reply_markup"] = reply_markup
 
     message = SimpleNamespace(
         from_user=SimpleNamespace(id=from_user_id),

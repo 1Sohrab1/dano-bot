@@ -2,8 +2,11 @@ from aiogram.exceptions import TelegramAPIError
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup
 
 from app.router.admin.callbacks import AdminNav, AdminNavAction
+from app.router.admin.content.handlers import format_content_list
+from app.router.admin.content.keyboards import content_list_keyboard
 from app.router.admin.dashboard.router import dashboard_admin
 from app.router.admin.keyboards import back_keyboard, dashboard_keyboard
+from app.services import content_management_service
 
 INVALID_REQUEST_REPLY = "درخواست نامعتبر."
 
@@ -18,12 +21,6 @@ UPLOAD_PROMPT_TEXT = (
     "\n"
     "فایل، ویدیو یا محتوای موردنظر را ارسال کنید.\n"
     "پس از ذخیره، لینک دسترسی ساخته می‌شود."
-)
-
-MANAGE_HINT_TEXT = (
-    "📚 مدیریت محتوا\n"
-    "\n"
-    "برای مشاهده و مدیریت محتوا از دستور /list استفاده کنید."
 )
 
 ADMIN_HELP_TEXT = (
@@ -57,7 +54,12 @@ async def admin_navigation_callback(
     elif callback_data.action == AdminNavAction.UPLOAD:
         await _show_screen(query, UPLOAD_PROMPT_TEXT, back_keyboard())
     elif callback_data.action == AdminNavAction.MANAGE:
-        await _show_screen(query, MANAGE_HINT_TEXT, back_keyboard())
+        result = await content_management_service.list_content(1)
+        await _show_screen(
+            query,
+            format_content_list(result),
+            content_list_keyboard(result),
+        )
     elif callback_data.action == AdminNavAction.HELP:
         await _show_screen(query, ADMIN_HELP_TEXT, back_keyboard())
     else:

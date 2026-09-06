@@ -9,7 +9,6 @@ from app.router.admin.dashboard.handlers import (
     ADMIN_HELP_TEXT,
     DASHBOARD_TEXT,
     INVALID_REQUEST_REPLY,
-    MANAGE_HINT_TEXT,
     UPLOAD_PROMPT_TEXT,
     admin_navigation_callback,
 )
@@ -113,15 +112,26 @@ def test_upload_callback_guides_into_upload_workflow() -> None:
     assert "answer" in recorded
 
 
-def test_manage_callback_points_to_existing_workflow() -> None:
+def test_manage_callback_open_content_list() -> None:
+    from app.database.repositories import create_content
+
+    async def seed() -> None:
+        await create_content(
+            source_chat_id=123,
+            source_message_id=456,
+            content_type="document",
+            code="mngcode001",
+        )
+
+    asyncio.run(seed())
     query, recorded = _make_query()
 
     asyncio.run(
         admin_navigation_callback(query, AdminNav(action=AdminNavAction.MANAGE))
     )
 
-    assert "/list" in recorded["edit_text"]
-    assert recorded["edit_text"] == MANAGE_HINT_TEXT
+    assert "محتوا" in recorded["edit_text"]
+    assert "mngcode001" in recorded["edit_text"]
     assert recorded["edit_markup"] is not None
     assert "answer" in recorded
 
