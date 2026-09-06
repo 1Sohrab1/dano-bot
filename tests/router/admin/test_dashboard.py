@@ -141,7 +141,11 @@ def test_help_callback_renders_admin_help() -> None:
 def test_unknown_admin_nav_action_is_rejected() -> None:
     query, recorded = _make_query()
 
-    asyncio.run(admin_navigation_callback(query, AdminNav(action="unknown")))
+    asyncio.run(
+        admin_navigation_callback(
+            query, AdminNav.model_construct(action="unknown")
+        )
+    )
 
     assert recorded["answer"] == INVALID_REQUEST_REPLY
     assert "edit_text" not in recorded

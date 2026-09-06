@@ -103,7 +103,9 @@ def test_start_callback_rerenders_welcome() -> None:
 def test_unknown_user_nav_action_is_rejected() -> None:
     query, recorded = _make_query()
 
-    asyncio.run(user_navigation_callback(query, UserNav(action="unknown")))
+    asyncio.run(
+        user_navigation_callback(query, UserNav.model_construct(action="unknown"))
+    )
 
     assert recorded["answer"] == INVALID_REQUEST_REPLY
     assert "edit_text" not in recorded

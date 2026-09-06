@@ -1,7 +1,9 @@
+from enum import StrEnum
+
 from aiogram.filters.callback_data import CallbackData
 
 
-class AdminNavAction:
+class AdminNavAction(StrEnum):
     DASHBOARD = "dashboard"
     UPLOAD = "upload"
     MANAGE = "manage"
@@ -9,4 +11,4 @@ class AdminNavAction:
 
 
 class AdminNav(CallbackData, prefix="adminnav"):
-    action: str
+    action: AdminNavAction
