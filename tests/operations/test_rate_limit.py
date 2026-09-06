@@ -17,6 +17,7 @@ from app.middlewares.rate_limit import (
 )
 from app.router.admin import admins
 from app.router.admin.content import content_admin
+from app.router.admin.dashboard import dashboard_admin
 from app.router.user import users
 from app.services import rate_limit_service
 from app.services.rate_limit_service import (
@@ -345,6 +346,51 @@ def test_admin_content_message_consumes_single_increment(monkeypatch) -> None:
         AsyncMock(return_value="handled"),
     )
     event = SimpleNamespace(from_user=SimpleNamespace(id=9001))
+    event.answer = AsyncMock()
+
+    assert asyncio.run(chain(event, {})) == "handled"
+    event.answer.assert_not_awaited()
+
+
+def test_admin_content_callback_consumes_single_increment(monkeypatch) -> None:
+    """Drive the middleware chain aiogram resolves for content callbacks.
+
+    With an admin limit of 1, the first content callback must be allowed.
+    A middleware copy on the parent admins.callback_query observer would
+    be resolved into this chain as well, blocking even the first callback.
+    """
+    monkeypatch.setattr(settings, "rate_limit_admin_per_minute", 1)
+    monkeypatch.setattr(
+        rate_limit_service, "_default_store", InMemoryRateLimitStore()
+    )
+
+    chain = MiddlewareManager.wrap_middlewares(
+        content_admin.callback_query._resolve_middlewares(),
+        AsyncMock(return_value="handled"),
+    )
+    event = SimpleNamespace(from_user=SimpleNamespace(id=9002))
+    event.answer = AsyncMock()
+
+    assert asyncio.run(chain(event, {})) == "handled"
+    event.answer.assert_not_awaited()
+
+
+def test_admin_dashboard_callback_consumes_single_increment(monkeypatch) -> None:
+    """Drive the middleware chain aiogram resolves for dashboard callbacks.
+
+    Dashboard callbacks live on their own sub-router so they stay rate
+    limited without passing through a parent copy.
+    """
+    monkeypatch.setattr(settings, "rate_limit_admin_per_minute", 1)
+    monkeypatch.setattr(
+        rate_limit_service, "_default_store", InMemoryRateLimitStore()
+    )
+
+    chain = MiddlewareManager.wrap_middlewares(
+        dashboard_admin.callback_query._resolve_middlewares(),
+        AsyncMock(return_value="handled"),
+    )
+    event = SimpleNamespace(from_user=SimpleNamespace(id=9003))
     event.answer = AsyncMock()
 
     assert asyncio.run(chain(event, {})) == "handled"

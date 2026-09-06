@@ -4,16 +4,17 @@ from types import SimpleNamespace
 from app.middlewares.rate_limit import ADMIN_SCOPE, RateLimitMiddleware
 from app.router.admin import admins
 from app.router.admin.callbacks import AdminNav, AdminNavAction
-from app.router.admin.filters import AdminCallbackQueryFilter
-from app.router.admin.handlers import (
+from app.router.admin.dashboard import dashboard_admin
+from app.router.admin.dashboard.handlers import (
     ADMIN_HELP_TEXT,
     DASHBOARD_TEXT,
     INVALID_REQUEST_REPLY,
     MANAGE_HINT_TEXT,
     UPLOAD_PROMPT_TEXT,
-    admin_handler,
     admin_navigation_callback,
 )
+from app.router.admin.filters import AdminCallbackQueryFilter
+from app.router.admin.handlers import admin_handler
 from app.router.admin.keyboards import back_keyboard, dashboard_keyboard
 
 
@@ -172,7 +173,7 @@ def test_non_admin_callback_is_rejected_by_filter() -> None:
 def test_admin_callback_queries_have_authorization_and_rate_limit() -> None:
     registered = [
         handler.callback.__name__
-        for handler in admins.callback_query.handlers
+        for handler in dashboard_admin.callback_query.handlers
     ]
     assert "admin_navigation_callback" in registered
 
@@ -185,9 +186,20 @@ def test_admin_callback_queries_have_authorization_and_rate_limit() -> None:
         is True
     )
 
-    scopes = [
+    dashboard_scopes = [
+        middleware.scope
+        for middleware in dashboard_admin.callback_query.middleware
+        if isinstance(middleware, RateLimitMiddleware)
+    ]
+    assert dashboard_scopes == [ADMIN_SCOPE]
+
+    # The parent admins.callback_query observer must not register its own
+    # copy: aiogram resolves parent router middlewares into the child
+    # chain, so a parent copy would double-count content callbacks.
+    parent_scopes = [
         middleware.scope
         for middleware in admins.callback_query.middleware
         if isinstance(middleware, RateLimitMiddleware)
     ]
-    assert scopes == [ADMIN_SCOPE]
+    assert parent_scopes == []
+    assert dashboard_admin in admins.sub_routers
