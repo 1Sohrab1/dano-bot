@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from sqlalchemy.exc import OperationalError
 
 from app import logging as app_logging
+from app import main as app_main
 from app.config import Settings
 from app.main import startup
 from app.services import health_service
@@ -176,3 +177,31 @@ def test_startup_fails_when_health_check_fails(monkeypatch) -> None:
 
     assert status.state == ApplicationState.FAILED
     assert status.is_ready is False
+
+
+def test_main_warms_bot_identity_before_polling(monkeypatch) -> None:
+    events: list[str] = []
+
+    class FakeSession:
+        async def close(self) -> None:
+            events.append("close")
+
+    class FakeBot:
+        def __init__(self, token: str) -> None:
+            assert token == app_main.settings.bot_token
+            self.session = FakeSession()
+
+        async def get_me(self) -> None:
+            events.append("get_me")
+
+    async def start_polling(bot: FakeBot) -> None:
+        assert isinstance(bot, FakeBot)
+        events.append("polling")
+
+    monkeypatch.setattr(app_main, "Bot", FakeBot)
+    monkeypatch.setattr(app_main, "startup", AsyncMock())
+    monkeypatch.setattr(app_main.dp, "start_polling", start_polling)
+
+    asyncio.run(app_main.main())
+
+    assert events == ["get_me", "polling", "close"]
