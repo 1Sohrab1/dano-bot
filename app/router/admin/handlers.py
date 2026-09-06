@@ -8,6 +8,8 @@ from app.services.content_service import (
     create_content_upload,
 )
 
+from .dashboard.handlers import DASHBOARD_TEXT
+from .keyboards import dashboard_keyboard
 from .router import admins
 
 UNSUPPORTED_CONTENT_REPLY = "این نوع پیام پشتیبانی نمی‌شود."
@@ -15,7 +17,7 @@ UNSUPPORTED_CONTENT_REPLY = "این نوع پیام پشتیبانی نمی‌ش
 
 @admins.message(Command("admin"))
 async def admin_handler(message: Message) -> None:
-    await message.answer("✅ شما ادمین هستید.")
+    await message.answer(DASHBOARD_TEXT, reply_markup=dashboard_keyboard())
 
 
 @admins.message(F.content_type.in_(SUPPORTED_CONTENT_TYPES))

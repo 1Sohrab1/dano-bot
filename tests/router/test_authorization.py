@@ -26,10 +26,11 @@ def test_admin_filter_rejects_missing_user() -> None:
 
 def test_start_handler_persists_user() -> None:
     async def run() -> None:
-        recorded: dict[str, str] = {}
+        recorded: dict = {}
 
-        async def answer(text: str) -> None:
+        async def answer(text: str, reply_markup=None) -> None:
             recorded["text"] = text
+            recorded["reply_markup"] = reply_markup
 
         message = SimpleNamespace(
             from_user=SimpleNamespace(id=555),

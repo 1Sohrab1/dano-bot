@@ -35,7 +35,7 @@ The current template includes:
   health checks through `app/logging.py` and `health_service`
 - uv dependency and lockfile management
 - Docker and Compose deployment skeleton
-- basic `/start` and `/admin` example handlers
+- keyboard-driven `/start` welcome and `/admin` dashboard entry points
 - pytest, Ruff, and ty verification
 - GitHub Actions CI (lint, tests, type checks, Compose validation, image build)
 - operational runbooks for backup, restore, rollout, and rollback in

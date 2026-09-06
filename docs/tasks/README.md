@@ -14,6 +14,7 @@ order.
 | 03 | [Access and delivery](./03-access.md) | Done | 02 |
 | 04 | [Administration workflows](./04-administration.md) | Done | 01, 02 |
 | 05 | [Operations and production readiness](./05-operations.md) | Done | 01–04 |
+| 06 | [Telegram UX and interaction system](./06-telegram-ux.md) | In Progress | 01–05 |
 
 ## PR rules
 

@@ -47,6 +47,8 @@ invalid-argument-type = "ignore"
 include = [
     "app/router/admin/handlers.py",
     "app/router/admin/content/handlers.py",
+    "app/router/admin/dashboard/handlers.py",
+    "app/router/user/handlers.py",
 ]
 
 [tool.ty.overrides.rules]
