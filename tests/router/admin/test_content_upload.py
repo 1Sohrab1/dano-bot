@@ -19,11 +19,14 @@ def test_content_upload_handler_persists_supported_document() -> None:
         async def answer(text: str) -> None:
             recorded["text"] = text
 
+        async def me() -> SimpleNamespace:
+            return SimpleNamespace(username="dano_bot")
+
         message = SimpleNamespace(
             content_type="document",
             chat=SimpleNamespace(id=111),
             message_id=222,
-            bot=SimpleNamespace(username="dano_bot"),
+            bot=SimpleNamespace(me=me),
             answer=answer,
         )
 

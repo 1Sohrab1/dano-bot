@@ -53,6 +53,7 @@ async def main() -> None:
     bot = Bot(token=settings.bot_token)
 
     try:
+        await bot.get_me()
         await dp.start_polling(bot)
     except Exception:
         logger.exception("event=unhandled_error")
