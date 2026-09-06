@@ -1,0 +1,15 @@
+name: Trigger CI Result Notification
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+
+jobs:
+  notify:
+    uses: ./.github/workflows/notify-ci-result.yml
+    secrets: inherit
+    with:
+      runner: ubuntu-latest
