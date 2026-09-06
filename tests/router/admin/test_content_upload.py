@@ -66,13 +66,15 @@ def test_unsupported_content_handler_does_not_persist() -> None:
 
 def test_admin_command_still_responds() -> None:
     async def run() -> None:
-        recorded: dict[str, str] = {}
+        recorded: dict = {}
 
-        async def answer(text: str) -> None:
+        async def answer(text: str, reply_markup=None) -> None:
             recorded["text"] = text
+            recorded["reply_markup"] = reply_markup
 
         await admin_handler(SimpleNamespace(answer=answer))
-        assert "ادمین" in recorded["text"]
+        assert "پنل مدیریت" in recorded["text"]
+        assert recorded["reply_markup"] is not None
 
     asyncio.run(run())
 
@@ -84,10 +86,11 @@ def test_non_admin_cannot_pass_admin_filter() -> None:
 
 def test_start_handler_does_not_create_content() -> None:
     async def run() -> None:
-        recorded: dict[str, str] = {}
+        recorded: dict = {}
 
-        async def answer(text: str) -> None:
+        async def answer(text: str, reply_markup=None) -> None:
             recorded["text"] = text
+            recorded["reply_markup"] = reply_markup
 
         message = SimpleNamespace(
             from_user=SimpleNamespace(id=555),

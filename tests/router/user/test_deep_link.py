@@ -44,10 +44,11 @@ def _make_message(bot: object, from_user_id: int) -> tuple[SimpleNamespace, dict
 
 def test_plain_start_behavior_is_unchanged() -> None:
     async def run() -> None:
-        recorded: dict[str, str] = {}
+        recorded: dict = {}
 
-        async def answer(text: str) -> None:
+        async def answer(text: str, reply_markup=None) -> None:
             recorded["text"] = text
+            recorded["reply_markup"] = reply_markup
 
         message = SimpleNamespace(
             from_user=SimpleNamespace(id=555),
@@ -55,6 +56,7 @@ def test_plain_start_behavior_is_unchanged() -> None:
         )
         await start_handler(message)
         assert "دانو" in recorded["text"]
+        assert recorded["reply_markup"] is not None
 
     asyncio.run(run())
 
