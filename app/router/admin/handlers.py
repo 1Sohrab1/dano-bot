@@ -22,7 +22,7 @@ async def admin_handler(message: Message) -> None:
 
 @admins.message(F.content_type.in_(SUPPORTED_CONTENT_TYPES))
 async def content_upload_handler(message: Message) -> None:
-    bot_username = message.bot.username if message.bot is not None else None
+    bot_username = (await message.bot.me()).username if message.bot is not None else None
 
     try:
         result = await create_content_upload(
